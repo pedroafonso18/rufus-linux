@@ -22,6 +22,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+#ifdef __linux__
+/* Linux: UTF-8 is the native encoding - use the POSIX implementation. */
+#include "posix/msapi_utf8_posix.h"
+#else
 #include <windows.h>
 #include <stdio.h>
 #include <shlobj.h>
@@ -1448,3 +1452,5 @@ static __inline BOOL GetVolumeInformationU(LPCSTR lpRootPathName, LPSTR lpVolume
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* !__linux__ */

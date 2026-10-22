@@ -18,6 +18,10 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifdef __linux__
+/* Linux: use the POSIX (worker thread based) implementation. */
+#include "posix/winio_posix.h"
+#else
 #include <windows.h>
 #include "msapi_utf8.h"
 
@@ -175,3 +179,5 @@ static __inline BOOL GetSizeAsync(HANDLE h, LPDWORD lpNumberOfBytes)
 	fd->Overlapped.Offset += *lpNumberOfBytes;
 	return TRUE;
 }
+
+#endif /* !__linux__ */

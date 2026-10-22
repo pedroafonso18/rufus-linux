@@ -323,6 +323,13 @@ const char* GetEditionName(DWORD ProductType)
 	}
 }
 
+#ifdef __linux__
+/* Windows "S Mode" has no equivalent on Linux. */
+BOOL isSMode(void)
+{
+	return FALSE;
+}
+#else
 PF_TYPE_DECL(WINAPI, HRESULT, WldpQueryWindowsLockdownMode, (PWLDP_WINDOWS_LOCKDOWN_MODE));
 BOOL isSMode(void)
 {
@@ -341,10 +348,27 @@ BOOL isSMode(void)
 out:
 	return r;
 }
+#endif
 
 /*
  * Modified from smartmontools' os_win32.cpp
  */
+#ifdef __linux__
+/*
+ * On Linux, we report a generic version number. The Windows version is only
+ * used to decide on Windows specific behaviour (such as the Windows To Go
+ * and Windows 11 features), none of which apply here.
+ */
+void GetWindowsVersion(windows_version_t* windows_version)
+{
+	memset(windows_version, 0, sizeof(*windows_version));
+	windows_version->Version = 10;
+	windows_version->Major = 10;
+	windows_version->Minor = 0;
+	windows_version->BuildNumber = 0;
+	windows_version->Edition = 0;
+}
+#else
 void GetWindowsVersion(windows_version_t* windows_version)
 {
 	OSVERSIONINFOEXA vi, vi2;
@@ -493,10 +517,29 @@ void GetWindowsVersion(windows_version_t* windows_version)
 	if (isSMode())
 		safe_sprintf(vptr, vlen, " in S Mode");
 }
+#endif
 
 /*
  * Why oh why does Microsoft make it so convoluted to retrieve a measly executable's version number ?
  */
+#ifdef __linux__
+/*
+ * The PE version resources are a Windows concept. On Linux, we report the
+ * version of the Rufus application itself.
+ */
+version_t* GetExecutableVersion(const char* path)
+{
+	static version_t version, *r = NULL;
+
+	(void)path;
+	memset(&version, 0, sizeof(version));
+	version.Major = rufus_version[0];
+	version.Minor = rufus_version[1];
+	version.Micro = rufus_version[2];
+	r = &version;
+	return r;
+}
+#else
 version_t* GetExecutableVersion(const char* path)
 {
 	static version_t version, *r = NULL;
@@ -533,6 +576,7 @@ out:
 	free(buf);
 	return r;
 }
+#endif
 
 /*
  * String array manipulation
@@ -608,6 +652,12 @@ void StrArrayDestroy(StrArray* arr)
 /*
  * Retrieve the SID of the current user. The returned PSID must be freed by the caller using LocalFree()
  */
+#ifdef __linux__
+/* The concept of a Windows SID has no equivalent on Linux. */
+static PSID GetSID(void) {
+	return NULL;
+}
+#else
 static PSID GetSID(void) {
 	TOKEN_USER* tu = NULL;
 	DWORD len;
@@ -655,6 +705,7 @@ static PSID GetSID(void) {
 	free(tu);
 	return ret;
 }
+#endif
 
 BOOL FileIO(enum file_io_type io_type, char* path, char** buffer, DWORD* size)
 {
@@ -1000,6 +1051,23 @@ BOOL SetNDTA(BOOL bRestore, BOOL* bExistingKey, DWORD dwValue)
  * This call tries to evenly balance the affinities for an array of
  * num_threads, according to the number of cores at our disposal...
  */
+#ifdef __linux__
+BOOL SetThreadAffinity(DWORD_PTR* thread_affinity, size_t num_threads)
+{
+	size_t i;
+	long cpus = sysconf(_SC_NPROCESSORS_ONLN);
+
+	memset(thread_affinity, 0, num_threads * sizeof(DWORD_PTR));
+	if (cpus < 1)
+		return FALSE;
+	if ((size_t)cpus < num_threads)
+		return FALSE;
+	/* Spread the threads over the available CPUs, one per core */
+	for (i = 0; i < num_threads; i++)
+		thread_affinity[i] = ((DWORD_PTR)1) << (i % (size_t)cpus);
+	return TRUE;
+}
+#else
 BOOL SetThreadAffinity(DWORD_PTR* thread_affinity, size_t num_threads)
 {
 	size_t i, j, pc;
@@ -1029,12 +1097,22 @@ BOOL SetThreadAffinity(DWORD_PTR* thread_affinity, size_t num_threads)
 	uuprintf("  thr_%llu:\t%s", i, printbitslz(thread_affinity[i]));
 	return TRUE;
 }
+#endif
 
 /*
  * Returns true if:
  * 1. The OS supports UAC, UAC is on, and the current process runs elevated, or
  * 2. The OS doesn't support UAC or UAC is off, and the process is being run by a member of the admin group
  */
+#ifdef __linux__
+/*
+ * On Linux, the equivalent of an elevated process is one that runs as root.
+ */
+BOOL IsCurrentProcessElevated(void)
+{
+	return (geteuid() == 0);
+}
+#else
 BOOL IsCurrentProcessElevated(void)
 {
 	BOOL r = FALSE;
@@ -1069,23 +1147,32 @@ out:
 	safe_closehandle(token);
 	return r;
 }
+#endif
 
 char* ToLocaleName(DWORD lang_id)
 {
 	static char mui_str[LOCALE_NAME_MAX_LENGTH];
-	wchar_t wmui_str[LOCALE_NAME_MAX_LENGTH];
 
-	if (LCIDToLocaleName(lang_id, wmui_str, LOCALE_NAME_MAX_LENGTH, 0) > 0) {
-		wchar_to_utf8_no_alloc(wmui_str, mui_str, LOCALE_NAME_MAX_LENGTH);
-	} else {
-		static_strcpy(mui_str, "en-US");
-	}
+	(void)lang_id;
+	/* Linux has no notion of a Windows MUI language */
+	static_strcpy(mui_str, "en-US");
 	return mui_str;
 }
 
 /*
  * From: https://stackoverflow.com/a/40390858/1069307
  */
+#ifdef __linux__
+/*
+ * On Linux, the equivalent of enabling a privilege is running as root, which
+ * we either are or are not.
+ */
+BOOL SetPrivilege(HANDLE hToken, LPCWSTR pwzPrivilegeName, BOOL bEnable)
+{
+	(void)hToken; (void)pwzPrivilegeName; (void)bEnable;
+	return TRUE;
+}
+#else
 BOOL SetPrivilege(HANDLE hToken, LPCWSTR pwzPrivilegeName, BOOL bEnable)
 {
 	TOKEN_PRIVILEGES tp;
@@ -1113,11 +1200,35 @@ BOOL SetPrivilege(HANDLE hToken, LPCWSTR pwzPrivilegeName, BOOL bEnable)
 
 	return TRUE;
 }
+#endif
 
 /*
  * Mount an offline registry hive located at <pszHivePath> into <key>\<pszHiveName>.
  * <key> should be HKEY_LOCAL_MACHINE or HKEY_USERS.
  */
+#ifdef __linux__
+/*
+ * Offline registry hives are a Windows concept; on Linux, the equivalent
+ * operation is not applicable.
+ */
+BOOL MountRegistryHive(const HKEY key, const char* pszHiveName, const char* pszHivePath)
+{
+	(void)key; (void)pszHiveName; (void)pszHivePath;
+	return FALSE;
+}
+
+BOOL UnmountRegistryHive(const HKEY key, const char* pszHiveName)
+{
+	(void)key; (void)pszHiveName;
+	return FALSE;
+}
+
+BOOL TakeOwnership(LPCSTR lpszOwnFile)
+{
+	(void)lpszOwnFile;
+	return FALSE;
+}
+#else
 BOOL MountRegistryHive(const HKEY key, const char* pszHiveName, const char* pszHivePath)
 {
 	LSTATUS status;
@@ -1238,3 +1349,5 @@ out:
 	safe_closehandle(hToken);
 	return ret;
 }
+
+#endif /* !__linux__ */

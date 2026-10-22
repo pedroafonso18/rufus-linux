@@ -17,6 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef __linux__
+/* Linux port: use the POSIX implementation of this interface. */
+#include "linux/linux_headers.h"
+#else
+
+
 #include <stdint.h>
 #include <windows.h>
 #include <virtdisk.h>
@@ -114,3 +120,5 @@ extern void VhdUnmountImage(void);
 extern BOOL SaveImage(void);
 extern void OpticalDiscSaveImage(void);
 extern DWORD WINAPI IsoSaveImageThread(void* param);
+
+#endif /* !__linux__ */

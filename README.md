@@ -41,6 +41,19 @@ Compilation
 
 Use either Visual Studio 2026 or MinGW and then invoke the `.sln` or `configure`/`make` respectively.
 
+#### Linux
+
+A native Linux port of Rufus is also available. It uses the same code base,
+with a Win32 compatibility layer and a POSIX implementation of the device,
+drive and formatting layers, plus a GTK 3 graphical interface.
+
+```
+$ ./build-linux.sh
+$ sudo build/rufus-linux -i image.iso -d /dev/sdb
+```
+
+See [README-linux.md](README-linux.md) for the details.
+
 #### Visual Studio
 
 Rufus is an OSI compliant Open Source project. You are entitled to

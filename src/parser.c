@@ -34,6 +34,7 @@
 #include <fcntl.h>
 
 #include "rufus.h"
+#include "efi.h"
 #include "missing.h"
 #include "msapi_utf8.h"
 #include "localization.h"

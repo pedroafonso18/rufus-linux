@@ -17,6 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef __linux__
+/* Linux port: use the POSIX implementation of this interface. */
+#include "linux/linux_headers.h"
+#else
+
+
 #include <stdint.h>
 #include <windows.h>
 #include <winioctl.h>	// for MEDIA_TYPE
@@ -120,3 +126,5 @@ BOOL FormatLargeFAT32(DWORD DriveIndex, uint64_t PartitionOffset, DWORD ClusterS
 BOOL FormatExtFs(DWORD DriveIndex, uint64_t PartitionOffset, DWORD BlockSize, LPCSTR FSName, LPCSTR Label, DWORD Flags);
 BOOL FormatPartition(DWORD DriveIndex, uint64_t PartitionOffset, DWORD UnitAllocationSize, USHORT FSType, LPCSTR Label, DWORD Flags);
 DWORD WINAPI FormatThread(void* param);
+
+#endif /* !__linux__ */

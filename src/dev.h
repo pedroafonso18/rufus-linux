@@ -17,6 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef __linux__
+/* Linux port: use the POSIX implementation of this interface. */
+#include "linux/linux_headers.h"
+#else
+
+
 #include <windows.h>
 #include <cfgmgr32.h>
 
@@ -192,3 +198,4 @@ typedef struct {
 	ULONG TxLaneCount;
 } MY_USB_NODE_CONNECTION_SUPERSPEEDPLUS_INFORMATION;
 
+#endif /* !__linux__ */

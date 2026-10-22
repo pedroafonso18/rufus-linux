@@ -35,7 +35,9 @@
 #include <math.h>
 
 #include "rufus.h"
+#ifndef __linux__
 #include "ntdll.h"
+#endif
 #include "winio.h"
 #include "missing.h"
 #include "settings.h"
@@ -693,6 +695,38 @@ DWORD WaitForSingleObjectWithMessages(HANDLE hHandle, DWORD dwMilliseconds)
 	return res;
 }
 
+#ifdef __linux__
+
+/*
+ * On Linux, preallocating a file is simply a matter of creating it and
+ * setting its length.
+ */
+HANDLE CreatePreallocatedFile(const char* lpFileName, DWORD dwDesiredAccess,
+	DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition,
+	DWORD dwFlagsAndAttributes, LONGLONG fileSize)
+{
+	HANDLE handle;
+	int fd;
+
+	handle = CreateFileU(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes,
+		dwCreationDisposition, dwFlagsAndAttributes, NULL);
+	if (handle == INVALID_HANDLE_VALUE)
+		return handle;
+	fd = win_handle_to_fd(handle);
+	if (fd >= 0 && fileSize > 0) {
+		if (ftruncate(fd, (off_t)fileSize) < 0) {
+			CloseHandle(handle);
+			SetLastError(ERROR_DISK_FULL);
+			return INVALID_HANDLE_VALUE;
+		}
+		/* Try to reserve the space on the file system */
+		posix_fallocate(fd, 0, (off_t)fileSize);
+	}
+	return handle;
+}
+
+#else
+
 #define STATUS_SUCCESS					((NTSTATUS)0x00000000L)
 #define STATUS_PROCEDURE_NOT_FOUND		((NTSTATUS)0xC000007AL)
 #define FILE_ATTRIBUTE_VALID_FLAGS		0x00007FB7
@@ -820,6 +854,10 @@ HANDLE CreatePreallocatedFile(const char* lpFileName, DWORD dwDesiredAccess,
 
 	return fileHandle;
 }
+
+#endif /* !__linux__ */
+
+#ifndef __linux__
 
 // The following calls are used to resolve the addresses of DLL function calls
 // that are not publicly exposed by Microsoft. This is accomplished by downloading
@@ -955,6 +993,8 @@ out:
 	pfSymCleanup(hRufus);
 	return r;
 }
+
+#endif /* !__linux__ */
 
 static void print_extracted_file(const char* file_path, uint64_t file_length)
 {

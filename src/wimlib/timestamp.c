@@ -27,6 +27,9 @@
 
 #include "wimlib.h" /* for struct wimlib_timespec */
 #include "wimlib/timestamp.h"
+#ifndef _WIN32
+#include <sys/time.h>
+#endif
 
 /*
  * Timestamps in WIM files are Windows NT timestamps, or FILETIMEs: 64-bit

@@ -17,6 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef __linux__
+/* Linux port: use the POSIX implementation of this interface. */
+#include "linux/linux_headers.h"
+#else
+
+
 #include <windows.h>
 #include <stdint.h>
 #include "resource.h"
@@ -116,3 +122,5 @@ extern void ShowLanguageMenu(RECT rcExclude);
 extern void SetPassesTooltip(void);
 extern void SetBootTypeDropdownWidth(void);
 extern void OnPaint(HDC hdc);
+
+#endif /* !__linux__ */

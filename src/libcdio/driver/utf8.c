@@ -275,6 +275,33 @@ bool cdio_charset_to_utf8(const char *src, size_t src_len, cdio_utf8_t **dst,
   {
   iconv_t ic;
   bool result;
+
+  /* Eliminate empty strings.
+   *
+   * The Windows implementation of this function (which does not use iconv)
+   * rejects empty strings, and the ISO-9660/Joliet code relies on this to
+   * skip the "." and ".." directory entries, whose Joliet names are encoded
+   * as a single UCS-2 NUL character. We need to behave identically here,
+   * otherwise those entries end up being processed as regular (empty
+   * named) files.
+   */
+  if (src == NULL || src_len < 1) {
+    if (dst != NULL)
+      *dst = NULL;
+    return false;
+  }
+  if (strcmp(src_charset, "UCS-2BE") == 0) {
+    if ((src_len >= 2) && (src[0] == 0) && (src[1] == 0)) {
+      if (dst != NULL)
+        *dst = NULL;
+      return false;
+    }
+  } else if (src[0] == 0) {
+    if (dst != NULL)
+      *dst = NULL;
+    return false;
+  }
+
   ic = iconv_open("UTF-8", src_charset);
   result = do_convert(ic, src, src_len, dst, NULL);
   iconv_close(ic);

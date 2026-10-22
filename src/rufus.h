@@ -16,8 +16,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <assert.h>
+#ifdef __linux__
+#include "posix/windows.h"
+#else
 #include <windows.h>
 #include <malloc.h>
+#endif
 #include <inttypes.h>
 
 #if defined(_MSC_VER)
@@ -147,6 +151,9 @@
 #elif defined(_M_ARM)
 #define OSCDIMG_URL                 "https://msdl.microsoft.com/download/symbols/oscdimg.exe/9CD825745F000/oscdimg.exe"
 #define OSCDIMG_HASH                "5ecd9956da589baa65806c884a55f9303ec6c6c559bdeb8afe00c72614a24c7a"
+#elif defined(__x86_64__) && defined(__linux__)
+#define OSCDIMG_URL                 "https://msdl.microsoft.com/download/symbols/oscdimg.exe/688CABB065000/oscdimg.exe"
+#define OSCDIMG_HASH                "2000160b2c504469b2f9a0ac308e5207f273d4880a572457af16d05886ba861"
 #endif
 #define SYMBOL_SERVER_USER_AGENT    "Microsoft-Symbol-Server/10.0.22621.755"
 #define DEFAULT_ESP_MOUNT_POINT     "S:\\"
@@ -213,7 +220,12 @@ static __inline void static_repchr(char* p, char s, char r) {
 	if (p != NULL) while (*p != 0) { if (*p == s) *p = r; p++; }
 }
 #define to_unix_path(str) static_repchr(str, '\\', '/')
+#ifdef __linux__
+/* On Linux, paths are always POSIX paths, so there is nothing to convert. */
+#define to_windows_path(str) do { } while(0)
+#else
 #define to_windows_path(str) static_repchr(str, '/', '\\')
+#endif
 #define if_assert_fails(cond) assert(cond); if (!(cond))
 #define if_assert_succeeds(cond) assert(cond); if ((cond))
 

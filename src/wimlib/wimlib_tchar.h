@@ -112,6 +112,7 @@ typedef char tchar;
 #  define tstrcpy	strcpy
 #  define tprintf	printf
 #  define tsprintf	sprintf
+#  define tsnprintf	snprintf
 #  define tfprintf	fprintf
 #  define tvfprintf	vfprintf
 #  define tscanf	sscanf

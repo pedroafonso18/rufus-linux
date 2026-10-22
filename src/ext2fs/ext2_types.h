@@ -3,6 +3,18 @@
  * everything we need.  (cross fingers)  Other header files may have
  * also defined the types that we need.
  */
+/*
+ * On Linux, the kernel headers provide the __u8/__u16/... types and the
+ * little and big endian variants. We use them instead of our own definitions
+ * so that we remain consistent with <linux/types.h>, which is pulled in by
+ * <sys/stat.h> and friends.
+ */
+#if defined(__linux__) && !defined(_BLKID_TYPES_H)
+/* Note: linux/types.h defines _LINUX_TYPES_H itself, which is what makes the
+ * block below be skipped. */
+#include <linux/types.h>
+#endif
+
 #if (!defined(_LINUX_TYPES_H) && !defined(_BLKID_TYPES_H) && \
 	!defined(_EXT2_TYPES_H))
 #define _EXT2_TYPES_H
@@ -76,12 +88,15 @@ typedef int64_t __s64;
 #define __force
 #endif
 
+#ifndef _LINUX_TYPES_H
+/* The kernel headers already provide these when they are in use. */
 typedef __u16	__bitwise	__le16;
 typedef __u32	__bitwise	__le32;
 typedef __u64	__bitwise	__le64;
 typedef __u16	__bitwise	__be16;
 typedef __u32	__bitwise	__be32;
 typedef __u64	__bitwise	__be64;
+#endif /* !_LINUX_TYPES_H */
 
 #endif /* EXT2_ENDIAN_H_ */
 

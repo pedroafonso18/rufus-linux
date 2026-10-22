@@ -17,6 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef __linux__
+/* Linux port: use the POSIX implementation of this interface. */
+#include "linux/linux_headers.h"
+#else
+
+
 #include <windows.h>
 #include <stdint.h>
 #include <winioctl.h>   // for DISK_GEOMETRY
@@ -413,3 +419,5 @@ BOOL ToggleEsp(DWORD DriveIndex, uint64_t PartitionOffset);
 const char* GetFsName(HANDLE hPhysical, LARGE_INTEGER StartingOffset);
 BOOL IsMsDevDrive(DWORD DriveIndex);
 BOOL IsFilteredDrive(DWORD DriveIndex);
+
+#endif /* !__linux__ */

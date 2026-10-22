@@ -367,3 +367,51 @@
 #define glthread_once_func            libintl_once_func
 #define glthread_once_singlethreaded  libintl_once_singlethreaded
 #define glthread_once_multithreaded   libintl_once_multithreaded
+
+/* ------------------------------------------------------------------------- */
+/* POSIX (Linux) overrides.                                                  */
+/*                                                                            */
+/* The configuration above was generated for MinGW/MSVC. The definitions     */
+/* that follow restore a sane POSIX configuration when the library is built   */
+/* for Linux.                                                                  */
+/* ------------------------------------------------------------------------- */
+#if defined(__linux__)
+#undef HAVE_WINSOCK_H
+#define HAVE_NETINET_IN_H 1
+#undef HAVE_WCSNLEN
+#undef HAVE_WINT_T
+#undef USE_WINDOWS_THREADS
+#undef HAVE_WORKING_O_NOATIME
+#define HAVE_WORKING_O_NOATIME 1
+#undef HAVE_WORKING_O_NOFOLLOW
+#define HAVE_WORKING_O_NOFOLLOW 1
+#undef SIZEOF_LONG
+#define SIZEOF_LONG 8
+#ifndef HAVE_LINUX_TYPES_H
+#define HAVE_LINUX_TYPES_H 1
+#endif
+#ifndef HAVE___U8
+#define HAVE___U8 1
+#endif
+#ifndef HAVE___S8
+#define HAVE___S8 1
+#endif
+#ifndef HAVE___U16
+#define HAVE___U16 1
+#endif
+#ifndef HAVE___S16
+#define HAVE___S16 1
+#endif
+#ifndef HAVE___U32
+#define HAVE___U32 1
+#endif
+#ifndef HAVE___S32
+#define HAVE___S32 1
+#endif
+#ifndef HAVE___U64
+#define HAVE___U64 1
+#endif
+#ifndef HAVE___S64
+#define HAVE___S64 1
+#endif
+#endif /* __linux__ */

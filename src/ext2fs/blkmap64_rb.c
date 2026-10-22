@@ -24,7 +24,8 @@
 #include <sys/types.h>
 #endif
 #if HAVE_LINUX_TYPES_H
-#include <linux/types.h>
+/* NOTE: linux/types.h is deliberately not included here: its __u64/__le64
+ * definitions conflict with the ones provided by ext2_types.h. */
 #endif
 
 #include "ext2_fs.h"

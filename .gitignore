@@ -66,3 +66,12 @@ embedded.loc
 /rufus_files
 stamp-h1
 /.vs/rufus
+
+# Linux port
+/build
+/build-*
+/CMakeCache.txt
+/CMakeFiles
+/cmake_install.cmake
+/CTestTestfile.cmake
+/Makefile.cmake

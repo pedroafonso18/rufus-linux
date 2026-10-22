@@ -1044,7 +1044,16 @@ wimlib_get_version_string(void)
 	return T(PACKAGE_VERSION);
 }
 
+#ifdef _WIN32
 static volatile uint16_t lib_initialization_mutex = 0;
+#else
+/* Atomic equivalent of the Windows InterlockedIncrement16() used below. */
+#define lib_initialization_mutex lib_initialization_counter
+static volatile uint16_t lib_initialization_counter = 0;
+#define InterlockedIncrement16(x) __sync_fetch_and_add((x), 1)
+#define InterlockedDecrement16(x) __sync_fetch_and_sub((x), 1)
+#define Sleep(x) usleep((x) * 1000)
+#endif
 static bool lib_initialized = false;
 
 /* API function documented in wimlib.h  */

@@ -38,6 +38,14 @@
 #include "localization.h"
 #include "ext2fs/ext2fs.h"
 
+#ifdef __linux__
+/* Linux port: the ext2/3/4 file systems are created through the POSIX I/O
+ * manager that replaces the Windows NT one. */
+#include "linux/linux_headers.h"
+extern io_manager unix_io_manager;
+#define nt_io_manager unix_io_manager
+#endif
+
 extern const char* FileSystemLabel[FS_MAX];
 extern io_manager nt_io_manager;
 extern DWORD ext2_last_winerror(DWORD default_error);

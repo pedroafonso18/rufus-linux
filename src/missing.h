@@ -17,8 +17,12 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifdef __linux__
+#include "posix/windows.h"
+#else
 #include <windows.h>
 #include <intrin.h>
+#endif
 
 #pragma once
 

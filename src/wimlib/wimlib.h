@@ -2760,6 +2760,7 @@ wimlib_add_tree(WIMStruct *wim, int image,
 		const wimlib_tchar *wim_target_path, int add_flags);
 
 #ifdef _RUFUS
+#if defined(_WIN32)
 static __inline int
 wimlib_add_treeU(WIMStruct *wim, int image,
 		const char *fs_source_path,
@@ -2773,6 +2774,17 @@ wimlib_add_treeU(WIMStruct *wim, int image,
 	wfree(wim_target_path);
 	return r;
 }
+#else
+/* On POSIX platforms, wimlib's "tchar" type is plain UTF-8, so no conversion
+ * is required. */
+static __inline int
+wimlib_add_treeU(WIMStruct *wim, int image,
+		const char *fs_source_path,
+		const char *wim_target_path, int add_flags)
+{
+	return wimlib_add_tree(wim, image, fs_source_path, wim_target_path, add_flags);
+}
+#endif
 #endif
 
 /**
@@ -3041,6 +3053,7 @@ wimlib_extract_image(WIMStruct *wim, int image,
 		     const wimlib_tchar *target, int extract_flags);
 
 #ifdef _RUFUS
+#if defined(_WIN32)
 static __inline int
 wimlib_extract_imageU(WIMStruct *wim, int image,
 		     const char *target, int extract_flags)
@@ -3051,6 +3064,14 @@ wimlib_extract_imageU(WIMStruct *wim, int image,
 	wfree(target);
 	return r;
 }
+#else
+static __inline int
+wimlib_extract_imageU(WIMStruct *wim, int image,
+		     const char *target, int extract_flags)
+{
+	return wimlib_extract_image(wim, image, target, extract_flags);
+}
+#endif
 #endif
 
 /**
@@ -3216,6 +3237,7 @@ wimlib_extract_paths(WIMStruct *wim,
 		     int extract_flags);
 
 #ifdef _RUFUS
+#if defined(_WIN32)
 static __inline int
 wimlib_extract_pathsU(WIMStruct* wim,
 	int image,
@@ -3240,6 +3262,18 @@ out:
 	wfree(target);
 	return r;
 }
+#else
+static __inline int
+wimlib_extract_pathsU(WIMStruct* wim,
+	int image,
+	const char* target,
+	const char* const* paths,
+	size_t num_paths,
+	int extract_flags)
+{
+	return wimlib_extract_paths(wim, image, target, paths, num_paths, extract_flags);
+}
+#endif
 #endif
 
 /**
@@ -3800,6 +3834,7 @@ wimlib_open_wim(const wimlib_tchar *wim_file,
 		WIMStruct **wim_ret);
 
 #ifdef _RUFUS
+#if defined(_WIN32)
 static __inline int
 wimlib_open_wimU(const char* wim_file,
 	int open_flags,
@@ -3810,6 +3845,15 @@ wimlib_open_wimU(const char* wim_file,
 	wfree(wim_file);
 	return r;
 }
+#else
+static __inline int
+wimlib_open_wimU(const char* wim_file,
+	int open_flags,
+	WIMStruct** wim_ret)
+{
+	return wimlib_open_wim(wim_file, open_flags, wim_ret);
+}
+#endif
 #endif
 
 /**
@@ -4435,6 +4479,7 @@ wimlib_split(WIMStruct *wim,
 	     int write_flags);
 
 #ifdef _RUFUS
+#if defined(_WIN32)
 static __inline int
 wimlib_splitU(WIMStruct *wim,
 	     const char *swm_name,
@@ -4446,6 +4491,16 @@ wimlib_splitU(WIMStruct *wim,
 	wfree(swm_name);
 	return r;
 }
+#else
+static __inline int
+wimlib_splitU(WIMStruct *wim,
+	     const char *swm_name,
+	     uint64_t part_size,
+	     int write_flags)
+{
+	return wimlib_split(wim, swm_name, part_size, write_flags);
+}
+#endif
 #endif
 
 /**
